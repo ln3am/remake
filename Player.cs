@@ -22,16 +22,16 @@ namespace remake
             switch (direction)
             {
                 case Direction.Left:
-                    deltaY = -1;
-                    break;
-                case Direction.Right:
-                    deltaY = 1;
-                    break;
-                case Direction.Up:
                     deltaX = -1;
                     break;
-                case Direction.Down:
+                case Direction.Right:
                     deltaX = 1;
+                    break;
+                case Direction.Up:
+                    deltaY = -1;
+                    break;
+                case Direction.Down:
+                    deltaY = 1;
                     break;
             }
             int newX = X + deltaX;
@@ -42,6 +42,7 @@ namespace remake
             tile.MovePlayerAway(direction);
             X = newX;
             Y = newY;
+
             tile = PlayingField.GetPlayerTile();
             tile.MovePlayerTo(LocalOppositeDirection(direction));
             if (tile.IsPlayerPointTile)CollectPoint(tile);
@@ -74,8 +75,7 @@ namespace remake
 
         public static void CollectPoint(Tile tile)
         {
-            Points++;
-            tile.CollectPlayerPoint();
+            Points += tile.CollectPlayerPoint();
         }
     }
 }

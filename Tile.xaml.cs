@@ -27,91 +27,170 @@ namespace remake
         public int Y;
         public bool IsPlayerPointTile = false;
         public bool IsPlayerTile = false;
+        public bool IsEnemyTile = false;
+        public int PointValue = 0;
         public double AnimationSpeed = 0.2;
+        private DispatcherTimer timer;
         public Tile()
         {
             InitializeComponent();
         }
         private void OnLoad(object sender, EventArgs e)
         {
-            SetTileColour(Colours.BlueGradient());
-            SetPlayerColour(Colours.VioletGradient());
+            SetShapeObjectColour(Colours.BlueGradient(), TileShapeObject.Tile);
+            SetShapeObjectColour(Colours.VioletGradient(), TileShapeObject.Player);
         }
         public bool IsEmpty()
         {
-            return (!IsPlayerPointTile && !IsPlayerTile) ? true : false;
+            return (!IsPlayerPointTile && !IsPlayerTile && !IsEnemyTile) ? true : false;
         }
-        public void SetTileColour(LinearGradientBrush colour)
+        public void SetShapeObjectColour(LinearGradientBrush colour, TileShapeObject shape)
         {
-            TileRec.Fill = colour;
+            DecideShapeObject(shape).Item2.Fill = colour;
         }
-        public void SetPlayerColour(LinearGradientBrush colour)
+        public void SetPoint(int value)
         {
-            TilePlayer.Fill = colour;
-        }
-        public void SetPlayerPoint()
-        {
-            IsPlayerPointTile = true;
             TileCirc.Visibility = Visibility.Visible;
+            PointValue = value;
         }
-        public void CollectPlayerPoint()
+        public void SetShapeObject(TileShapeObject shape)
         {
-            IsPlayerPointTile = false;
-            TileCirc.Visibility = Visibility.Collapsed;
+            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+            objects.Item2.Visibility = Visibility.Visible;
+            UpdateTileStateInfo(shape, true);
         }
         public void MovePlayerTo(Direction direction)
         {
-            IsPlayerTile = true;
-            ReappearAndMoveToCenter(direction);
+            IsPlayerPointTile = true;
+            ReappearAndMoveToCenter(direction, playerTransform, TilePlayer);
         }
         public void MovePlayerAway(Direction direction)
         {
-            IsPlayerTile = false;
-            MoveAndDisappear(direction);
+            IsPlayerPointTile = false;
+            MoveAndDisappear(direction, playerTransform, TilePlayer);
         }
-
-        private void MoveAndDisappear(Direction direction)
+        public void MoveShapeTo(Direction direction, TileShapeObject shape)
         {
-            DoubleAnimation moveAnimation = new DoubleAnimation
+            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+            MoveAndDisappear(direction, objects.Item1, objects.Item2);
+            UpdateTileStateInfo(shape, true);
+        }
+        public void MoveShapeTo(Direction direction, TileShapeObject shape, LinearGradientBrush colour)
+        {
+            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+            objects.Item2.Fill = colour;
+            MoveAndDisappear(direction, objects.Item1, objects.Item2);
+            UpdateTileStateInfo(shape, true);
+        }
+        public void MoveShapeAway(Direction direction, TileShapeObject shape)
+        {
+            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+            SetShapeObjectColour(Colours.BlueGradient(), TileShapeObject.Tile);
+            ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
+            UpdateTileStateInfo(shape, false);
+        }
+        private (TranslateTransform, Shape) DecideShapeObject(TileShapeObject shape)
+        {
+            switch (shape)
+            {
+                case TileShapeObject.Player:
+                    return (playerTransform, TilePlayer);
+                    break;
+                case TileShapeObject.Enemy:
+                    return (pointTransform, TileCirc);
+                    break;
+                case TileShapeObject.Tile: 
+                    return (null, TileRec);
+                    break;
+            }
+            return (null, null);
+        }
+        private void UpdateTileStateInfo(TileShapeObject shape, bool state)
+        {
+            switch (shape)
+            {
+                case TileShapeObject.Player:
+                    IsPlayerTile = state;
+                    break;
+                case TileShapeObject.Enemy:
+                    IsEnemyTile = state;
+                    break;
+                case TileShapeObject.Point:
+                    IsPlayerPointTile = state;
+                    break;
+            }
+        }
+        public int CollectPlayerPoint()
+        {
+            IsPlayerPointTile = false;
+            TileCirc.Visibility = Visibility.Collapsed;
+            return PointValue;
+        }
+        private void MoveAndDisappear(Direction direction, TranslateTransform moveShape, Shape shape)
+        {
+            DoubleAnimation moveAnimationX = new DoubleAnimation
             {
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
-                To = direction == Direction.Left || direction == Direction.Up ? -20 : 20,
+                To = (direction == Direction.Left || direction == Direction.UpLeft || direction == Direction.DownLeft) ? -20 : 20,
+                FillBehavior = FillBehavior.Stop
+            };
+
+            DoubleAnimation moveAnimationY = new DoubleAnimation
+            {
+                Duration = TimeSpan.FromSeconds(AnimationSpeed),
+                To = (direction == Direction.Up || direction == Direction.UpLeft || direction == Direction.UpRight) ? -20 : 20,
                 FillBehavior = FillBehavior.Stop
             };
 
             DoubleAnimation fadeOutAnimation = new DoubleAnimation
             {
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
-                To = 0 
+                To = 0
             };
 
             if (direction == Direction.Left || direction == Direction.Right)
             {
-                playerTransform.BeginAnimation(TranslateTransform.XProperty, moveAnimation);
+                moveShape.BeginAnimation(TranslateTransform.XProperty, moveAnimationX);
             }
-            else
+            else if (direction == Direction.Up || direction == Direction.Down)
             {
-                playerTransform.BeginAnimation(TranslateTransform.YProperty, moveAnimation);
+                moveShape.BeginAnimation(TranslateTransform.YProperty, moveAnimationY);
             }
-            
-            TilePlayer.BeginAnimation(UIElement.OpacityProperty, fadeOutAnimation);
+            else 
+            {
+                moveShape.BeginAnimation(TranslateTransform.XProperty, moveAnimationX);
+                moveShape.BeginAnimation(TranslateTransform.YProperty, moveAnimationY);
+            }
 
-            var timer = new DispatcherTimer { Interval = moveAnimation.Duration.TimeSpan };
+            shape.BeginAnimation(UIElement.OpacityProperty, fadeOutAnimation);
+
+            timer = new DispatcherTimer { Interval = moveAnimationX.Duration.TimeSpan };
             timer.Tick += (sender, e) =>
             {
                 timer.Stop();
-                TilePlayer.Visibility = Visibility.Collapsed;
-                playerTransform.X = playerTransform.Y = 0;
-                TilePlayer.Opacity = 1;
+                shape.Visibility = Visibility.Collapsed;
+                moveShape.X = moveShape.Y = 0;
+                shape.Opacity = 1;
             };
             timer.Start();
         }
-        private void ReappearAndMoveToCenter(Direction direction)
-        {
-            playerTransform.X = direction == Direction.Left ? -20 : direction == Direction.Right ? 20 : 0;
-            playerTransform.Y = direction == Direction.Up ? -20 : direction == Direction.Down ? 20 : 0;
 
-            DoubleAnimation moveAnimation = new DoubleAnimation
+        private void ReappearAndMoveToCenter(Direction direction, TranslateTransform moveShape, Shape shape)
+        {
+            if (timer != null) timer.Stop();
+
+            moveShape.X = (direction == Direction.Left || direction == Direction.UpLeft || direction == Direction.DownLeft) ? -20 :
+                          (direction == Direction.Right || direction == Direction.UpRight || direction == Direction.DownRight) ? 20 : 0;
+            moveShape.Y = (direction == Direction.Up || direction == Direction.UpLeft || direction == Direction.UpRight) ? -20 :
+                          (direction == Direction.Down || direction == Direction.DownLeft || direction == Direction.DownRight) ? 20 : 0;
+
+            DoubleAnimation moveAnimationX = new DoubleAnimation
+            {
+                Duration = TimeSpan.FromSeconds(AnimationSpeed),
+                To = 0,
+            };
+
+            DoubleAnimation moveAnimationY = new DoubleAnimation
             {
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
                 To = 0,
@@ -120,22 +199,26 @@ namespace remake
             DoubleAnimation fadeInAnimation = new DoubleAnimation
             {
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
-                From = 0, 
-                To = 1  
+                From = 0,
+                To = 1
             };
 
-            TilePlayer.Visibility = Visibility.Visible;
-            TilePlayer.BeginAnimation(UIElement.OpacityProperty, fadeInAnimation);
+            shape.Visibility = Visibility.Visible;
+            shape.BeginAnimation(UIElement.OpacityProperty, fadeInAnimation);
 
             if (direction == Direction.Left || direction == Direction.Right)
             {
-                playerTransform.BeginAnimation(TranslateTransform.XProperty, moveAnimation);
+                moveShape.BeginAnimation(TranslateTransform.XProperty, moveAnimationX);
+            }
+            else if (direction == Direction.Up || direction == Direction.Down)
+            {
+                moveShape.BeginAnimation(TranslateTransform.YProperty, moveAnimationY);
             }
             else 
             {
-                playerTransform.BeginAnimation(TranslateTransform.YProperty, moveAnimation); 
+                moveShape.BeginAnimation(TranslateTransform.XProperty, moveAnimationX);
+                moveShape.BeginAnimation(TranslateTransform.YProperty, moveAnimationY);
             }
-            
         }
     }
 }

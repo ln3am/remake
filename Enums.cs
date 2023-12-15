@@ -11,6 +11,17 @@ namespace remake
         Left, 
         Right,
         Up,
-        Down
+        Down,
+        UpLeft,
+        UpRight,
+        DownLeft,
+        DownRight
+    }
+    public enum TileShapeObject
+    {
+        Player,
+        Point, 
+        Tile,
+        Enemy
     }
 }

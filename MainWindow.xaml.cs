@@ -23,7 +23,6 @@ namespace remake
     public partial class MainWindow : Window
     {
         Random random;
-        DispatcherTimer timer;
         public MainWindow()
         {
             InitializeComponent();
@@ -32,47 +31,42 @@ namespace remake
         private void OnLoad(object sender, RoutedEventArgs e)
         {
             random = new Random();
-            StartTimeEvent();
             this.Focus();
             PlayingField.ScoreBock = ScoreBlock;
             PlayingField.TileGrid = TileGrid;
             PlayingField.UpgradeButton = UpgradeButton;
 
-            for (int i = 0; i < PlayingField.GridSquare; i++)
+            PlayingField.StartTimeTick();
+            LocalCreateTileGrid();
+            
+            PlayingField.GetPlayerTile().SetShapeObject(TileShapeObject.Player);
+            PlayingField.UpdateGameInfo();
+
+            void LocalCreateTileGrid()
             {
-                TileGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(50) });
-                TileGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
-            }
-            for (int row = 0; row < PlayingField.GridSquare; row++)
-            {
-                for (int col = 0; col < PlayingField.GridSquare; col++)
+                for (int i = 0; i < PlayingField.GridSquare; i++)
                 {
-                    Tile tile = new Tile();
-                    tile.X = col;
-                    tile.Y = row;
-                    Grid.SetRow(tile, row);
-                    Grid.SetColumn(tile, col);
-                    TileGrid.Children.Add(tile);
-                    if (random.Next(0, 30) <= 0 && !Player.IsPlayerOnTile(tile)) tile.SetPlayerPoint();
+                    TileGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(50) });
+                    TileGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
+                }
+                for (int row = 0; row < PlayingField.GridSquare; row++)
+                {
+                    for (int col = 0; col < PlayingField.GridSquare; col++)
+                    {
+                        Tile tile = new Tile();
+                        tile.X = col;
+                        tile.Y = row;
+                        Grid.SetRow(tile, row);
+                        Grid.SetColumn(tile, col);
+                        TileGrid.Children.Add(tile);
+                        if (random.Next(0, 30) <= 0 && !Player.IsPlayerOnTile(tile)) tile.SetPoint(1);
+                    }
                 }
             }
-            PlayingField.GetPlayerTile().MovePlayerTo(Direction.Down); //gets the default tile
-            PlayingField.UpdateGameInfo();
         }
         private void OnUpgradeClick(object sender, RoutedEventArgs e)
         {
             PlayingField.UpgradeClick();
-        }
-        private void StartTimeEvent()
-        {
-            timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(3);
-            timer.Tick += (sender, e) =>
-            {
-                PlayingField.AddPointOnMap();
-                PlayingField.UpdateGameInfo();
-            };
-            timer.Start();
         }
        
         protected override void OnKeyDown(KeyEventArgs e)

@@ -22,7 +22,13 @@
         
         <Viewbox>
             <Canvas Width="50" Height="50">
-                <Ellipse x:Name="TileCirc" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" VerticalAlignment="Center" Width="40" Height="40" HorizontalAlignment="Center" Canvas.Left="5" Canvas.Top="5"/>
+
+                <Grid VerticalAlignment="Center" Width="30" Height="30" HorizontalAlignment="Center" Canvas.Left="10" Canvas.Top="10">
+                <Ellipse x:Name="TileCirc" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="pointTransform"/>
+                    </Grid.RenderTransform>
+                </Grid>
                 <Polygon x:Name="TilePlayer" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
                     <Polygon.Points>
                         <Point X="20" Y="19"/>
@@ -36,12 +42,25 @@
                         <TranslateTransform x:Name="playerTransform"/>
                     </Polygon.RenderTransform>
                 </Polygon>
+                
                 <Grid Canvas.Left="19" Canvas.Top="23" DataContext="{Binding ElementName=TilePlayer}">
+                    <Grid.RenderTransform>
+                        <TranslateTransform X="{Binding RenderTransform.(TranslateTransform.X)}"
+                            Y="{Binding RenderTransform.(TranslateTransform.Y)}"/>
+                    </Grid.RenderTransform>
                     <Ellipse Panel.ZIndex="1" Fill="RoyalBlue" Width="3" Height="3" StrokeThickness="0.4" Stroke="Black" Opacity="{Binding Opacity}" Visibility="{Binding Visibility}"/>
                 </Grid>
+
                 <Grid Canvas.Left="14" Canvas.Top="22" DataContext="{Binding ElementName=TilePlayer}">
+                    <Grid.RenderTransform>
+                        <TranslateTransform X="{Binding RenderTransform.(TranslateTransform.X)}"
+                            Y="{Binding RenderTransform.(TranslateTransform.Y)}"/>
+                    </Grid.RenderTransform>
                     <Ellipse Panel.ZIndex="1" Fill="RoyalBlue" Width="3" Height="3" StrokeThickness="0.4" Stroke="Black" Opacity="{Binding Opacity}" Visibility="{Binding Visibility}"/>
                 </Grid>
+                
+                
+                
             </Canvas>
         </Viewbox>
     </Grid>
