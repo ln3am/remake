@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace remake
@@ -12,6 +13,7 @@ namespace remake
     {
         public static int X = 9;
         public static int Y = 9;
+        public static int HP = 3;
         public static int Points = 0;
         public static int Level = 0;
         public static void MovePlayer(Grid grid, Direction direction)
@@ -44,35 +46,18 @@ namespace remake
             Y = newY;
 
             tile = PlayingField.GetPlayerTile();
-            tile.MovePlayerTo(LocalOppositeDirection(direction));
+            tile.MovePlayerTo(PlayingField.OppositeDirection(direction));
             if (tile.IsPlayerPointTile)CollectPoint(tile);
             PlayingField.UpdateGameInfo();
 
-            Direction LocalOppositeDirection(Direction direction)
-            {
-                switch(direction)
-                {
-                    case Direction.Left:
-                        return Direction.Right;
-                        break;
-                    case Direction.Right:
-                        return Direction.Left;
-                        break;
-                    case Direction.Up:
-                        return Direction.Down;
-                        break;
-                    case Direction.Down:
-                        return Direction.Up;
-                        break;
-                }
-                return Direction.Down;
-            }
+            
         }
-        public static bool IsPlayerOnTile(Tile tile)
+        public static void DecreaseHP(int amount)
         {
-            return (tile.X == X && tile.Y == Y) ? true : false;
+            HP -= amount;
+            if (HP <= 0) MessageBox.Show("You died");
+            PlayingField.UpdateGameInfo();
         }
-
         public static void CollectPoint(Tile tile)
         {
             Points += tile.CollectPlayerPoint();

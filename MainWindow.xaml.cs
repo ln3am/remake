@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Remaster;
 
 namespace remake
 {
@@ -39,7 +40,9 @@ namespace remake
             PlayingField.StartTimeTick();
             LocalCreateTileGrid();
             
-            PlayingField.GetPlayerTile().SetShapeObject(TileShapeObject.Player);
+            PlayingField.GetPlayerTile().SetShapeObject(TileShapeObject.Player, Colours.VioletGradient());
+            ShapeEnemy se = new ShapeEnemy();
+            se.CreateEnemy();
             PlayingField.UpdateGameInfo();
 
             void LocalCreateTileGrid()
@@ -59,7 +62,7 @@ namespace remake
                         Grid.SetRow(tile, row);
                         Grid.SetColumn(tile, col);
                         TileGrid.Children.Add(tile);
-                        if (random.Next(0, 30) <= 0 && !Player.IsPlayerOnTile(tile)) tile.SetPoint(1);
+                        if (random.Next(0, 30) <= 0 && !tile.IsPlayerTile) tile.SetPoint(1);
                     }
                 }
             }

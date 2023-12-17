@@ -1,11 +1,5 @@
 ﻿using Remaster;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -25,7 +19,7 @@ namespace remake
         public static int UpgradeCost = 50;
         public static void UpdateGameInfo()
         {
-            ScoreBock.Text = $"Points: {Player.Points}\nLevel: {UpgradeStage}";
+            ScoreBock.Text = $"Points: {Player.Points}\nLevel: {UpgradeStage}\nHP: {Player.HP}";
             UpgradeButton.Content = $"Upgrade ({UpgradeCost})";
         }
         public static void StartTimeTick()
@@ -83,7 +77,7 @@ namespace remake
 
             void LocalUpgradeStageModify(int factor)
             {
-                if (!(Player.Points >= 10 * factor)) return;
+                if (!(Player.Points >= UpgradeCost)) return;
                 Player.Points -= 10 * factor;
                 UpgradeStage = 1 * factor;
                 UpgradeCost = 50 * factor;
@@ -113,30 +107,91 @@ namespace remake
                 return null;
             }
         }
-        public static Tile GetTile(int rowY, int columnX)
+        public static Direction OppositeDirection(Direction direction)
         {
-            int index = rowY * GridSquare + columnX;
-            if (index < TileGrid.Children.Count)
+            switch (direction)
             {
-                return TileGrid.Children[index] as Tile;
+                case Direction.Left:
+                    return Direction.Right;
+                case Direction.Right:
+                    return Direction.Left;
+                case Direction.Up:
+                    return Direction.Down;
+                case Direction.Down:
+                    return Direction.Up;
+                case Direction.UpLeft:
+                    return Direction.DownRight;
+                case Direction.UpRight:
+                    return Direction.DownLeft;
+                case Direction.DownLeft:
+                    return Direction.UpRight;
+                case Direction.DownRight:
+                    return Direction.UpLeft;
+                default:
+                    return Direction.Down;
             }
-            else
+        }
+        public static (int, int) UpdateCoordinatesFromDirection(int X, int Y, Direction direction)
+        {
+            switch (direction)
             {
-                return null;
+                case Direction.Left:
+                    X -= 1;
+                    break;
+                case Direction.Right:
+                    X += 1;
+                    break;
+                case Direction.Up:
+                    Y += 1;
+                    break;
+                case Direction.Down:
+                    Y -= 1;
+                    break;
+                case Direction.UpLeft:
+                    X -= 1;
+                    Y += 1;
+                    break;
+                case Direction.UpRight:
+                    X += 1;
+                    Y += 1;
+                    break;
+                case Direction.DownLeft:
+                    X -= 1;
+                    Y -= 1;
+                    break;
+                case Direction.DownRight:
+                    X += 1;
+                    Y -= 1;
+                    break;
             }
+            return (X, Y);
+        }
+        public static Direction DetermineDirectionBetweenTiles(int tile1X, int tile1Y, int tile2X, int tile2Y)
+        {
+            bool moveOnX = Math.Abs(tile1X - tile2X) >= Math.Abs(tile1Y - tile2Y);
+            bool moveOnY = Math.Abs(tile1Y - tile2Y) >= Math.Abs(tile1X - tile2X);
+            if (moveOnX && moveOnY)
+            {
+                if (tile1X < tile2X && tile1Y < tile2Y) return Direction.UpRight;
+                if (tile1X > tile2X && tile1Y < tile2Y) return Direction.UpLeft;
+                if (tile1X < tile2X && tile1Y > tile2Y) return Direction.DownRight;
+                if (tile1X > tile2X && tile1Y > tile2Y) return Direction.DownLeft;
+            } 
+            if (moveOnX) return tile1X < tile2X ? Direction.Right : Direction.Left;
+            if (moveOnY) return tile1Y < tile2Y ? Direction.Up : Direction.Down;
+            return Direction.Down;
+        }
+        public static Tile GetTile(int X, int Y)
+        {
+            int index = Y * GridSquare + X;
+            if (index < TileGrid.Children.Count) return TileGrid.Children[index] as Tile;
+            return null;
         }
         public static Tile GetPlayerTile()
         {
             int index = Player.Y * GridSquare + Player.X;
-            if (index < TileGrid.Children.Count)
-            {
-                return TileGrid.Children[index] as Tile;
-            }
-            else
-            {
-                return null;
-            }
+            if (index < TileGrid.Children.Count)return TileGrid.Children[index] as Tile;
+            return null;
         }
-
     }
 }

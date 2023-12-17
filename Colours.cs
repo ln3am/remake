@@ -47,6 +47,42 @@ namespace Remaster
 
             return gradient;
         }
+        public static LinearGradientBrush GreenGradient()
+        {
+            LinearGradientBrush gradient = new LinearGradientBrush();
+            gradient.StartPoint = new Point(0, 0);
+            gradient.EndPoint = new Point(1, 1);
+            gradient.GradientStops.Add(new GradientStop(Colors.LightGreen, 0.0));
+            gradient.GradientStops.Add(new GradientStop(Colors.LimeGreen, 0.25));
+            gradient.GradientStops.Add(new GradientStop(Colors.ForestGreen, 0.5));
+            gradient.GradientStops.Add(new GradientStop(Colors.DarkGreen, 0.75));
+            gradient.GradientStops.Add(new GradientStop(Colors.Green, 1.0));
 
+            return gradient;
+        }
+        public static LinearGradientBrush OrangeGradient()
+        {
+            LinearGradientBrush gradient = new LinearGradientBrush();
+            gradient.StartPoint = new Point(0, 0);
+            gradient.EndPoint = new Point(1, 1);
+            gradient.GradientStops.Add(new GradientStop(Colors.LightSalmon, 0.0));
+            gradient.GradientStops.Add(new GradientStop(Colors.Coral, 0.25));
+            gradient.GradientStops.Add(new GradientStop(Colors.DarkOrange, 0.5));
+            gradient.GradientStops.Add(new GradientStop(Colors.OrangeRed, 0.75));
+            gradient.GradientStops.Add(new GradientStop(Colors.DarkRed, 1.0));
+
+            return gradient;
+        }
+        public static LinearGradientBrush GreenGradientBrush()
+        {
+            LinearGradientBrush gradient = new LinearGradientBrush();
+            gradient.StartPoint = new Point(0, 0);
+            gradient.EndPoint = new Point(1, 1);
+            gradient.GradientStops.Add(new GradientStop(Colors.LightGreen, 0.0));
+            gradient.GradientStops.Add(new GradientStop(Colors.Green, 0.5));
+            gradient.GradientStops.Add(new GradientStop(Colors.DarkGreen, 1.0));
+
+            return gradient;
+        }
     }
 }

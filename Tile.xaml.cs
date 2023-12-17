@@ -44,49 +44,45 @@ namespace remake
         {
             return (!IsPlayerPointTile && !IsPlayerTile && !IsEnemyTile) ? true : false;
         }
-        public void SetShapeObjectColour(LinearGradientBrush colour, TileShapeObject shape)
-        {
-            DecideShapeObject(shape).Item2.Fill = colour;
-        }
         public void SetPoint(int value)
         {
+            IsPlayerPointTile = true;
+            TileCirc.Fill = Colours.GreenGradient();
             TileCirc.Visibility = Visibility.Visible;
             PointValue = value;
         }
-        public void SetShapeObject(TileShapeObject shape)
-        {
-            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            objects.Item2.Visibility = Visibility.Visible;
-            UpdateTileStateInfo(shape, true);
-        }
         public void MovePlayerTo(Direction direction)
         {
-            IsPlayerPointTile = true;
+            IsPlayerTile = true;
             ReappearAndMoveToCenter(direction, playerTransform, TilePlayer);
         }
         public void MovePlayerAway(Direction direction)
         {
-            IsPlayerPointTile = false;
+            IsPlayerTile = false;
             MoveAndDisappear(direction, playerTransform, TilePlayer);
         }
-        public void MoveShapeTo(Direction direction, TileShapeObject shape)
+        public void SetShapeObjectColour(LinearGradientBrush colour, TileShapeObject shape)
+        {
+            DecideShapeObject(shape).Item2.Fill = colour;
+        }
+        public void SetShapeObject(TileShapeObject shape, LinearGradientBrush colour)
         {
             (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            MoveAndDisappear(direction, objects.Item1, objects.Item2);
+            objects.Item2.Fill = colour;
+            objects.Item2.Visibility = Visibility.Visible;
             UpdateTileStateInfo(shape, true);
         }
         public void MoveShapeTo(Direction direction, TileShapeObject shape, LinearGradientBrush colour)
         {
             (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+            ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
             objects.Item2.Fill = colour;
-            MoveAndDisappear(direction, objects.Item1, objects.Item2);
             UpdateTileStateInfo(shape, true);
         }
         public void MoveShapeAway(Direction direction, TileShapeObject shape)
         {
             (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            SetShapeObjectColour(Colours.BlueGradient(), TileShapeObject.Tile);
-            ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
+            MoveAndDisappear(direction, objects.Item1, objects.Item2);
             UpdateTileStateInfo(shape, false);
         }
         private (TranslateTransform, Shape) DecideShapeObject(TileShapeObject shape)
@@ -95,13 +91,12 @@ namespace remake
             {
                 case TileShapeObject.Player:
                     return (playerTransform, TilePlayer);
-                    break;
                 case TileShapeObject.Enemy:
                     return (pointTransform, TileCirc);
-                    break;
                 case TileShapeObject.Tile: 
                     return (null, TileRec);
-                    break;
+                case TileShapeObject.Point:
+                    return (pointTransform, TileCirc);
             }
             return (null, null);
         }
@@ -177,8 +172,6 @@ namespace remake
 
         private void ReappearAndMoveToCenter(Direction direction, TranslateTransform moveShape, Shape shape)
         {
-            if (timer != null) timer.Stop();
-
             moveShape.X = (direction == Direction.Left || direction == Direction.UpLeft || direction == Direction.DownLeft) ? -20 :
                           (direction == Direction.Right || direction == Direction.UpRight || direction == Direction.DownRight) ? 20 : 0;
             moveShape.Y = (direction == Direction.Up || direction == Direction.UpLeft || direction == Direction.UpRight) ? -20 :
