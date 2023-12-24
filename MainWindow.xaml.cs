@@ -36,13 +36,14 @@ namespace remake
             PlayingField.ScoreBock = ScoreBlock;
             PlayingField.TileGrid = TileGrid;
             PlayingField.UpgradeButton = UpgradeButton;
+            PlayingField.UIDispatcher = Dispatcher;
 
             PlayingField.StartTimeTick();
             LocalCreateTileGrid();
             
             PlayingField.GetPlayerTile().SetShapeObject(TileShapeObject.Player, Colours.VioletGradient());
+
             ShapeEnemy se = new ShapeEnemy();
-            se.CreateEnemy();
             PlayingField.UpdateGameInfo();
 
             void LocalCreateTileGrid()
@@ -59,6 +60,7 @@ namespace remake
                         Tile tile = new Tile();
                         tile.X = col;
                         tile.Y = row;
+                        tile.UIDispatcher = Dispatcher;
                         Grid.SetRow(tile, row);
                         Grid.SetColumn(tile, col);
                         TileGrid.Children.Add(tile);

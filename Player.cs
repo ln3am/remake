@@ -50,7 +50,6 @@ namespace remake
             if (tile.IsPlayerPointTile)CollectPoint(tile);
             PlayingField.UpdateGameInfo();
 
-            
         }
         public static void DecreaseHP(int amount)
         {

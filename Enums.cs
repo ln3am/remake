@@ -8,6 +8,7 @@ namespace remake
 {
     public enum Direction
     {
+        Center,
         Left, 
         Right,
         Up,
@@ -22,6 +23,7 @@ namespace remake
         Player,
         Point, 
         Tile,
-        Enemy
+        Enemy,
+        ShockExplosive
     }
 }

@@ -28,6 +28,8 @@ namespace remake
         public bool IsPlayerPointTile = false;
         public bool IsPlayerTile = false;
         public bool IsEnemyTile = false;
+        public Dispatcher UIDispatcher;
+        public bool IsExplosiveTile = false;
         public int PointValue = 0;
         public double AnimationSpeed = 0.2;
         private DispatcherTimer timer;
@@ -42,7 +44,7 @@ namespace remake
         }
         public bool IsEmpty()
         {
-            return (!IsPlayerPointTile && !IsPlayerTile && !IsEnemyTile) ? true : false;
+            return (IsPlayerPointTile && IsPlayerTile && IsEnemyTile && IsExplosiveTile) ? false : true;
         }
         public void SetPoint(int value)
         {
@@ -65,26 +67,45 @@ namespace remake
         {
             DecideShapeObject(shape).Item2.Fill = colour;
         }
+        public int CollectPlayerPoint()
+        {
+            Dispatcher.Invoke(new Action(() =>
+            {
+                IsPlayerPointTile = false;
+                TileCirc.Visibility = Visibility.Collapsed;
+            }));
+            return PointValue;
+        }
         public void SetShapeObject(TileShapeObject shape, LinearGradientBrush colour)
         {
-            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            objects.Item2.Fill = colour;
-            objects.Item2.Visibility = Visibility.Visible;
-            UpdateTileStateInfo(shape, true);
+           UIDispatcher.Invoke(new Action(() =>
+           {
+               (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+               objects.Item2.Fill = colour;
+               objects.Item2.Visibility = Visibility.Visible;
+               UpdateTileStateInfo(shape, true);
+           }));
         }
         public void MoveShapeTo(Direction direction, TileShapeObject shape, LinearGradientBrush colour)
         {
-            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
-            objects.Item2.Fill = colour;
-            UpdateTileStateInfo(shape, true);
+            UIDispatcher.Invoke(new Action(() =>
+            {
+                (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+                ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
+                objects.Item2.Fill = colour;
+                UpdateTileStateInfo(shape, true);
+            }));
         }
         public void MoveShapeAway(Direction direction, TileShapeObject shape)
         {
-            (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-            MoveAndDisappear(direction, objects.Item1, objects.Item2);
-            UpdateTileStateInfo(shape, false);
+            UIDispatcher.Invoke(new Action(() =>
+            {
+                (TranslateTransform, Shape) objects = DecideShapeObject(shape);
+                MoveAndDisappear(direction, objects.Item1, objects.Item2);
+                UpdateTileStateInfo(shape, false);
+            }));
         }
+
         private (TranslateTransform, Shape) DecideShapeObject(TileShapeObject shape)
         {
             switch (shape)
@@ -97,6 +118,8 @@ namespace remake
                     return (null, TileRec);
                 case TileShapeObject.Point:
                     return (pointTransform, TileCirc);
+                case TileShapeObject.ShockExplosive:
+                    return (shocktTransform, TileTria);
             }
             return (null, null);
         }
@@ -113,13 +136,10 @@ namespace remake
                 case TileShapeObject.Point:
                     IsPlayerPointTile = state;
                     break;
+                case TileShapeObject.ShockExplosive:
+                    IsExplosiveTile = state;
+                    break;
             }
-        }
-        public int CollectPlayerPoint()
-        {
-            IsPlayerPointTile = false;
-            TileCirc.Visibility = Visibility.Collapsed;
-            return PointValue;
         }
         private void MoveAndDisappear(Direction direction, TranslateTransform moveShape, Shape shape)
         {

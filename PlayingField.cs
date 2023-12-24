@@ -3,17 +3,19 @@ using System;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Threading;
 
 namespace remake
 {
     public static class PlayingField
     {
         private static DispatcherTimer timer;
-
+        public static Dispatcher UIDispatcher;
         public static double EventTick = 1;
         public static int GridSquare = 17; 
         public static TextBlock ScoreBock;
         public static Grid TileGrid;
+        public static Random random = new Random();
         public static Button UpgradeButton;
         public static int UpgradeStage = 0;
         public static int UpgradeCost = 50;
@@ -30,6 +32,7 @@ namespace remake
             {
                 AddPointOnMap(1);
                 UpdateGameInfo();
+                if (random.Next(0, 4) == 1) new ShapeShockExplosive(7, 2000);
             };
             timer.Start();
         }
@@ -142,44 +145,52 @@ namespace remake
                     X += 1;
                     break;
                 case Direction.Up:
-                    Y += 1;
+                    Y -= 1;
                     break;
                 case Direction.Down:
-                    Y -= 1;
+                    Y += 1;
                     break;
                 case Direction.UpLeft:
                     X -= 1;
-                    Y += 1;
+                    Y -= 1;
                     break;
                 case Direction.UpRight:
                     X += 1;
-                    Y += 1;
+                    Y -= 1;
                     break;
                 case Direction.DownLeft:
                     X -= 1;
-                    Y -= 1;
+                    Y += 1;
                     break;
                 case Direction.DownRight:
                     X += 1;
-                    Y -= 1;
+                    Y += 1;
                     break;
             }
             return (X, Y);
         }
-        public static Direction DetermineDirectionBetweenTiles(int tile1X, int tile1Y, int tile2X, int tile2Y)
+        public static (Direction, int, int) DetermineDirectionBetweenTiles(int tile1X, int tile1Y, int tile2X, int tile2Y)
         {
-            bool moveOnX = Math.Abs(tile1X - tile2X) >= Math.Abs(tile1Y - tile2Y);
-            bool moveOnY = Math.Abs(tile1Y - tile2Y) >= Math.Abs(tile1X - tile2X);
-            if (moveOnX && moveOnY)
+            int distanceX = Math.Abs(tile1X - tile2X);
+            int distanceY = Math.Abs(tile1Y - tile2Y);
+            bool moveOnX = distanceX >= distanceY;
+            bool moveOnY = distanceY >= distanceX;
+
+            return (LocalDecideDirection(moveOnX, moveOnY), distanceX, distanceY);
+
+            Direction LocalDecideDirection(bool onX, bool onY)
             {
-                if (tile1X < tile2X && tile1Y < tile2Y) return Direction.UpRight;
-                if (tile1X > tile2X && tile1Y < tile2Y) return Direction.UpLeft;
-                if (tile1X < tile2X && tile1Y > tile2Y) return Direction.DownRight;
-                if (tile1X > tile2X && tile1Y > tile2Y) return Direction.DownLeft;
-            } 
-            if (moveOnX) return tile1X < tile2X ? Direction.Right : Direction.Left;
-            if (moveOnY) return tile1Y < tile2Y ? Direction.Up : Direction.Down;
-            return Direction.Down;
+                if (moveOnX && moveOnY)
+                {
+                    if (tile1X < tile2X && tile1Y < tile2Y) return Direction.DownRight;
+                    if (tile1X > tile2X && tile1Y < tile2Y) return Direction.DownLeft;
+                    if (tile1X < tile2X && tile1Y > tile2Y) return Direction.UpRight;
+                    if (tile1X > tile2X && tile1Y > tile2Y) return Direction.UpLeft;
+                }
+                if (moveOnX) return tile1X < tile2X ? Direction.Right : Direction.Left;
+                if (moveOnY) return tile1Y < tile2Y ? Direction.Down : Direction.Up;
+                return Direction.Up;
+            }
         }
         public static Tile GetTile(int X, int Y)
         {

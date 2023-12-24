@@ -24,11 +24,13 @@
             <Canvas Width="50" Height="50">
 
                 <Grid VerticalAlignment="Center" Width="30" Height="30" HorizontalAlignment="Center" Canvas.Left="10" Canvas.Top="10">
-                <Ellipse x:Name="TileCirc" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
+                    <Ellipse x:Name="TileCirc" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
                     <Grid.RenderTransform>
                         <TranslateTransform x:Name="pointTransform"/>
                     </Grid.RenderTransform>
                 </Grid>
+               
+
                 <Polygon x:Name="TilePlayer" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
                     <Polygon.Points>
                         <Point X="20" Y="19"/>
@@ -40,6 +42,17 @@
                     </Polygon.Points>
                     <Polygon.RenderTransform>
                         <TranslateTransform x:Name="playerTransform"/>
+                    </Polygon.RenderTransform>
+                </Polygon>
+
+                <Polygon x:Name="TileTria" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
+                    <Polygon.Points>
+                        <Point X="25" Y="9"/>
+                        <Point X="40" Y="40"/>
+                        <Point X="10" Y="40"/>
+                    </Polygon.Points>
+                    <Polygon.RenderTransform>
+                        <TranslateTransform x:Name="shocktTransform"/>
                     </Polygon.RenderTransform>
                 </Polygon>
                 
@@ -58,8 +71,6 @@
                     </Grid.RenderTransform>
                     <Ellipse Panel.ZIndex="1" Fill="RoyalBlue" Width="3" Height="3" StrokeThickness="0.4" Stroke="Black" Opacity="{Binding Opacity}" Visibility="{Binding Visibility}"/>
                 </Grid>
-                
-                
                 
             </Canvas>
         </Viewbox>
