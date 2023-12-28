@@ -1,6 +1,7 @@
 ﻿using Remaster;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +33,8 @@ namespace remake
         public bool IsExplosiveTile = false;
         public int PointValue = 0;
         public double AnimationSpeed = 0.2;
-        private DispatcherTimer timer;
+
+        private DispatcherTimer Timer;
         public Tile()
         {
             InitializeComponent();
@@ -65,7 +67,7 @@ namespace remake
         }
         public void SetShapeObjectColour(LinearGradientBrush colour, TileShapeObject shape)
         {
-            DecideShapeObject(shape).Item2.Fill = colour;
+            DecideShapeObject(shape).Item2.Fill = colour; 
         }
         public int CollectPlayerPoint()
         {
@@ -86,13 +88,13 @@ namespace remake
                UpdateTileStateInfo(shape, true);
            }));
         }
-        public void MoveShapeTo(Direction direction, TileShapeObject shape, LinearGradientBrush colour)
+        public void MoveShapeTo(Direction direction, TileShapeObject shape, GradientColour colour)
         {
             UIDispatcher.Invoke(new Action(() =>
             {
                 (TranslateTransform, Shape) objects = DecideShapeObject(shape);
                 ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
-                objects.Item2.Fill = colour;
+                SetShapeObjectColour(GetColour(colour), shape);
                 UpdateTileStateInfo(shape, true);
             }));
         }
@@ -141,6 +143,25 @@ namespace remake
                     break;
             }
         }
+        private LinearGradientBrush GetColour(GradientColour colour)
+        {
+            switch (colour)
+            {
+                case GradientColour.Blue:
+                    return Colours.BlueGradient();
+                case GradientColour.Red:
+                    return Colours.RedGradient();
+                case GradientColour.Violet:
+                    return Colours.VioletGradient();
+                case GradientColour.Green:
+                    return Colours.GreenGradient();
+                case GradientColour.Orange:
+                    return Colours.OrangeGradient();
+                case GradientColour.GreenBrush:
+                    return Colours.GreenGradientBrush();
+            }
+            return null;
+        }
         private void MoveAndDisappear(Direction direction, TranslateTransform moveShape, Shape shape)
         {
             DoubleAnimation moveAnimationX = new DoubleAnimation
@@ -179,15 +200,15 @@ namespace remake
 
             shape.BeginAnimation(UIElement.OpacityProperty, fadeOutAnimation);
 
-            timer = new DispatcherTimer { Interval = moveAnimationX.Duration.TimeSpan };
-            timer.Tick += (sender, e) =>
+            Timer = new DispatcherTimer { Interval = moveAnimationX.Duration.TimeSpan };
+            Timer.Tick += (sender, e) =>
             {
-                timer.Stop();
+                Timer.Stop();
                 shape.Visibility = Visibility.Collapsed;
                 moveShape.X = moveShape.Y = 0;
                 shape.Opacity = 1;
             };
-            timer.Start();
+            Timer.Start();
         }
 
         private void ReappearAndMoveToCenter(Direction direction, TranslateTransform moveShape, Shape shape)

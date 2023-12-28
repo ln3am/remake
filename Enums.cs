@@ -26,4 +26,13 @@ namespace remake
         Enemy,
         ShockExplosive
     }
+    public enum GradientColour
+    {
+        Red,
+        Blue,
+        Violet,
+        Green,
+        Orange,
+        GreenBrush
+    }
 }

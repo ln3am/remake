@@ -21,8 +21,10 @@ namespace remake
         public static int UpgradeCost = 50;
         public static void UpdateGameInfo()
         {
-            ScoreBock.Text = $"Points: {Player.Points}\nLevel: {UpgradeStage}\nHP: {Player.HP}";
-            UpgradeButton.Content = $"Upgrade ({UpgradeCost})";
+            UIDispatcher.Invoke(new Action(() => {
+                ScoreBock.Text = $"Points: {Player.Points}\nLevel: {UpgradeStage}\nHP: {Player.HP}";
+                UpgradeButton.Content = $"Upgrade ({UpgradeCost})";
+            }));
         }
         public static void StartTimeTick()
         {
@@ -32,7 +34,7 @@ namespace remake
             {
                 AddPointOnMap(1);
                 UpdateGameInfo();
-                if (random.Next(0, 4) == 1) new ShapeShockExplosive(7, 2000);
+                if (random.Next(0, 6) == 1) new ShapeShockExplosive(5, 2000);
             };
             timer.Start();
         }
@@ -48,7 +50,8 @@ namespace remake
 
                 countloop++;
                 if (countloop == 100) return null;
-                if (!tile.IsEmpty()) continue;
+                var directionDistance = DetermineDirectionBetweenTiles(Player.X, Player.Y, x, y);
+                if (!tile.IsEmpty() && 3 < (directionDistance.Item2 + directionDistance.Item3)) continue;
                 return tile;
             }
         }
@@ -102,10 +105,8 @@ namespace remake
                     case 0:
                     case 1:
                         return Colours.BlueGradient();
-                        break;
-                    case 3: return Colours.RedGradient();
-                        break;
-                       
+                    case 3: 
+                        return Colours.RedGradient();
                 }
                 return null;
             }

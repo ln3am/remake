@@ -38,9 +38,7 @@ namespace Remaster
     }
     public class ShapeEnemy : BaseShapeObstacle
     {
-        public ShapeEnemy() : base(TileShapeObject.Enemy)
-        {
-        }
+        public ShapeEnemy() : base(TileShapeObject.Enemy) { }
         public override void MoveEnemy(object sender, EventArgs e)
         {
             var directionDistance = PlayingField.DetermineDirectionBetweenTiles(X, Y, Player.X, Player.Y);
@@ -53,7 +51,7 @@ namespace Remaster
             else SetTimerInterval(timerIntervalMS);
 
             obstacle = PlayingField.GetTile(X, Y);
-            obstacle.MoveShapeTo(PlayingField.OppositeDirection(direction), Shape, Colours.RedGradient());
+            obstacle.MoveShapeTo(PlayingField.OppositeDirection(direction), Shape, GradientColour.Red);
             if (obstacle.IsPlayerTile) Player.DecreaseHP(1);
         }
     }
@@ -97,13 +95,13 @@ namespace Remaster
             void LocalMoveShape(Dictionary<int, List<(Tile, Direction)>> Coords, int key, bool MoveTo)
             {
                 foreach (var tileDirection in Coords[key])
-                    {
-                        Tile tile = tileDirection.Item1;
-                        if (tile.IsPlayerPointTile) tile.CollectPlayerPoint();
-                        if (tile.IsPlayerTile) Player.DecreaseHP(1);
-                        if (MoveTo) tile.MoveShapeTo(PlayingField.OppositeDirection(tileDirection.Item2), TileShapeObject.ShockExplosive, Colours.VioletGradient());
-                        else tile.MoveShapeAway(tileDirection.Item2, TileShapeObject.ShockExplosive);
-                    }
+                {
+                    Tile tile = tileDirection.Item1;
+                    if (tile.IsPlayerPointTile) tile.CollectPlayerPoint();
+                    if (tile.IsPlayerTile) Player.DecreaseHP(1);
+                    if (MoveTo) tile.MoveShapeTo(PlayingField.OppositeDirection(tileDirection.Item2), TileShapeObject.ShockExplosive, GradientColour.Violet);
+                    else tile.MoveShapeAway(tileDirection.Item2, TileShapeObject.ShockExplosive);
+                }
             }
         }
 
