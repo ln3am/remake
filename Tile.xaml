@@ -29,7 +29,13 @@
                         <TranslateTransform x:Name="pointTransform"/>
                     </Grid.RenderTransform>
                 </Grid>
-               
+                <Grid VerticalAlignment="Center" Width="30" Height="30" HorizontalAlignment="Center" Canvas.Left="10" Canvas.Top="10">
+                    <Ellipse x:Name="TileCircEnemy" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="enemyTransform"/>
+                    </Grid.RenderTransform>
+                </Grid>
+
 
                 <Polygon x:Name="TilePlayer" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
                     <Polygon.Points>

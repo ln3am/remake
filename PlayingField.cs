@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace remake
 {
@@ -18,7 +19,7 @@ namespace remake
         public static Random random = new Random();
         public static Button UpgradeButton;
         public static int UpgradeStage = 0;
-        public static int UpgradeCost = 50;
+        public static int UpgradeCost = 20;
         public static void UpdateGameInfo()
         {
             UIDispatcher.Invoke(new Action(() => {
@@ -34,7 +35,7 @@ namespace remake
             {
                 AddPointOnMap(1);
                 UpdateGameInfo();
-                if (random.Next(0, 6) == 1) new ShapeShockExplosive(5, 2000);
+                if (random.Next(0, 6) == 1) new ShapeShockExplosive(5, 1300);
             };
             timer.Start();
         }
@@ -84,9 +85,9 @@ namespace remake
             void LocalUpgradeStageModify(int factor)
             {
                 if (!(Player.Points >= UpgradeCost)) return;
-                Player.Points -= 10 * factor;
+                Player.Points -= 20 * factor;
                 UpgradeStage = 1 * factor;
-                UpgradeCost = 50 * factor;
+                UpgradeCost =  20 * factor;
             }
         }
         public static void RecolorAllTiles(int variation)
@@ -107,6 +108,8 @@ namespace remake
                         return Colours.BlueGradient();
                     case 3: 
                         return Colours.RedGradient();
+                    case 5:
+                        return Colours.GreenGradient();
                 }
                 return null;
             }
@@ -135,40 +138,56 @@ namespace remake
                     return Direction.Down;
             }
         }
+
         public static (int, int) UpdateCoordinatesFromDirection(int X, int Y, Direction direction)
         {
-            switch (direction)
+            int XP; 
+            int YP;
+            List<Direction> directions = new List<Direction> { Direction.Left, Direction.Right, Direction.Up, Direction.Down, Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight };
+            while (true)
             {
-                case Direction.Left:
-                    X -= 1;
-                    break;
-                case Direction.Right:
-                    X += 1;
-                    break;
-                case Direction.Up:
-                    Y -= 1;
-                    break;
-                case Direction.Down:
-                    Y += 1;
-                    break;
-                case Direction.UpLeft:
-                    X -= 1;
-                    Y -= 1;
-                    break;
-                case Direction.UpRight:
-                    X += 1;
-                    Y -= 1;
-                    break;
-                case Direction.DownLeft:
-                    X -= 1;
-                    Y += 1;
-                    break;
-                case Direction.DownRight:
-                    X += 1;
-                    Y += 1;
-                    break;
+                (XP, YP, directions) = LocalUpdateCoordinate(X, Y, direction, directions);
+                if (!GetTile(XP, YP).IsPlayerPointTile) break;
+                direction = directions[0];
             }
-            return (X, Y);
+            return (XP, YP);
+
+            (int, int, List<Direction>) LocalUpdateCoordinate(int x, int y, Direction directionLocal, List<Direction> directions)
+            {
+                switch (directionLocal)
+                {
+                    case Direction.Left:
+                        x -= 1;
+                        break;
+                    case Direction.Right:
+                        x += 1;
+                        break;
+                    case Direction.Up:
+                        y -= 1;
+                        break;
+                    case Direction.Down:
+                        y += 1;
+                        break;
+                    case Direction.UpLeft:
+                        x -= 1;
+                        y -= 1;
+                        break;
+                    case Direction.UpRight:
+                        x += 1;
+                        y -= 1;
+                        break;
+                    case Direction.DownLeft:
+                        x -= 1;
+                        y += 1;
+                        break;
+                    case Direction.DownRight:
+                        x += 1;
+                        y += 1;
+                        break;
+                }
+                directions.Remove(directionLocal);
+                return (x, y, directions);
+            }
         }
         public static (Direction, int, int) DetermineDirectionBetweenTiles(int tile1X, int tile1Y, int tile2X, int tile2Y)
         {

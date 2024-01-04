@@ -115,7 +115,7 @@ namespace remake
                 case TileShapeObject.Player:
                     return (playerTransform, TilePlayer);
                 case TileShapeObject.Enemy:
-                    return (pointTransform, TileCirc);
+                    return (enemyTransform, TileCircEnemy);
                 case TileShapeObject.Tile: 
                     return (null, TileRec);
                 case TileShapeObject.Point:
