@@ -42,8 +42,7 @@ namespace remake
             LocalCreateTileGrid();
             
             PlayingField.GetPlayerTile().SetShapeObject(TileShapeObject.Player, Colours.VioletGradient());
-
-            ShapeEnemy se = new ShapeEnemy();
+            PlayingField.AddEnemy(900);
             PlayingField.UpdateGameInfo();
 
             void LocalCreateTileGrid()
@@ -73,7 +72,6 @@ namespace remake
         {
             PlayingField.UpgradeClick();
         }
-       
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);

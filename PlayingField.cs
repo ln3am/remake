@@ -12,14 +12,20 @@ namespace remake
     {
         private static DispatcherTimer timer;
         public static Dispatcher UIDispatcher;
-        public static double EventTick = 1;
+        public static double EventTick = 0.5;
         public static int GridSquare = 17; 
         public static TextBlock ScoreBock;
         public static Grid TileGrid;
         public static Random random = new Random();
         public static Button UpgradeButton;
-        public static int UpgradeStage = 0;
-        public static int UpgradeCost = 20;
+        public static int UpgradeStage = 1;
+        public static int UpgradeBaseCost = 10;
+        public static int UpgradeCost = 10;
+        public static List<ShapeEnemy> Enemies = new List<ShapeEnemy>();
+
+        private static int ExplosiveRange = 6;
+        private static int ExplosiveSpeedInMS = 900;
+        private static int ExplosionSpawnChanceToOne = 12;
         public static void UpdateGameInfo()
         {
             UIDispatcher.Invoke(new Action(() => {
@@ -34,10 +40,20 @@ namespace remake
             timer.Tick += (sender, e) =>
             {
                 AddPointOnMap(1);
+                if (RandomDecide(9)) AddPointOnMap(5, Colours.BlueDarkGradient());
                 UpdateGameInfo();
-                if (random.Next(0, 6) == 1) new ShapeShockExplosive(5, 1300);
+                if (RandomDecide(ExplosionSpawnChanceToOne)) new ShapeShockExplosive(ExplosiveRange, ExplosiveSpeedInMS);
             };
             timer.Start();
+        }
+        public static void AddEnemy(int moveIntervalMS)
+        {
+            ShapeEnemy shapeEnemy = new ShapeEnemy(){ timerIntervalMS = moveIntervalMS };
+            Enemies.Add(shapeEnemy);
+        }
+        public static bool RandomDecide(int ChanceToOne) 
+        {
+           return random.Next(0, ChanceToOne) == 1;
         }
         public static Tile GetRandomFreeCoordinate()
         {
@@ -62,56 +78,34 @@ namespace remake
             if (tile == null) return;
             tile.SetPoint(Value);
         }
+        public static void AddPointOnMap(int Value, LinearGradientBrush colour)
+        {
+            Tile tile = GetRandomFreeCoordinate();
+            if (tile == null) return;
+            tile.SetPoint(Value);
+            tile.SetShapeObjectColour(colour, TileShapeObject.Point);
+        }
         public static void UpgradeClick()
         {
-            switch (UpgradeStage)
-            {
-                case 0:
-                    LocalUpgradeStageModify(1);
-                    break;
-                case 1:
-                    LocalUpgradeStageModify(2);
-                    break;
-                case 2:
-                    LocalUpgradeStageModify(3);
-                    break;
-                case 3:
-                    LocalUpgradeStageModify(4);
-                    break;
-            }
-            RecolorAllTiles(UpgradeStage);
-            UpdateGameInfo();
+            if (Player.Points < UpgradeCost) return;
+            Player.Points -= UpgradeCost;
+            UpgradeStage++;
+            UpgradeCost = UpgradeBaseCost * UpgradeStage;
 
-            void LocalUpgradeStageModify(int factor)
+            if (UpgradeStage == 4)
             {
-                if (!(Player.Points >= UpgradeCost)) return;
-                Player.Points -= 20 * factor;
-                UpgradeStage = 1 * factor;
-                UpgradeCost =  20 * factor;
+                ExplosiveSpeedInMS = 700;
+                AddEnemy(800);
             }
+           
+            UpdateGameInfo();   
         }
-        public static void RecolorAllTiles(int variation)
+        public static void RecolorAllTiles(LinearGradientBrush color)
         {
-            LinearGradientBrush color = LocalColourVariation(variation);
             if (color == null) return;
             foreach (Tile tile in TileGrid.Children)
             {
                 tile.SetShapeObjectColour(color, TileShapeObject.Tile);
-            }
-
-            LinearGradientBrush LocalColourVariation(int variation)
-            {
-                switch (variation)
-                {
-                    case 0:
-                    case 1:
-                        return Colours.BlueGradient();
-                    case 3: 
-                        return Colours.RedGradient();
-                    case 5:
-                        return Colours.GreenGradient();
-                }
-                return null;
             }
         }
         public static Direction OppositeDirection(Direction direction)
@@ -138,23 +132,9 @@ namespace remake
                     return Direction.Down;
             }
         }
-
-        public static (int, int) UpdateCoordinatesFromDirection(int X, int Y, Direction direction)
+        public static (int, int) UpdateCoordinatesFromDirection(int x, int y, Direction direction)
         {
-            int XP; 
-            int YP;
-            List<Direction> directions = new List<Direction> { Direction.Left, Direction.Right, Direction.Up, Direction.Down, Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight };
-            while (true)
-            {
-                (XP, YP, directions) = LocalUpdateCoordinate(X, Y, direction, directions);
-                if (!GetTile(XP, YP).IsPlayerPointTile) break;
-                direction = directions[0];
-            }
-            return (XP, YP);
-
-            (int, int, List<Direction>) LocalUpdateCoordinate(int x, int y, Direction directionLocal, List<Direction> directions)
-            {
-                switch (directionLocal)
+                switch (direction)
                 {
                     case Direction.Left:
                         x -= 1;
@@ -185,8 +165,30 @@ namespace remake
                         y += 1;
                         break;
                 }
-                directions.Remove(directionLocal);
-                return (x, y, directions);
+                return (x, y);
+        }
+        public static (int, int, bool, Direction) UpdateCoordinatesFromDirectionWithObstacles(int X, int Y, Direction direction, Direction previousDirection, List<TileShapeObject> tso)
+        {
+            int XP; 
+            int YP;
+            bool noMove = false;
+            PreferedDirection preferedDirection = new PreferedDirection();
+            while (true)
+            {
+                (XP, YP) = UpdateCoordinatesFromDirection(X, Y, direction);
+                if (IsWithinGrid(XP, YP) && direction != OppositeDirection(previousDirection) && !LocalIsOneOfTSO(GetTile(XP, YP), tso)) break;
+                direction = preferedDirection.GetDirection(direction);
+            }
+            return (XP, YP, noMove, direction);
+
+            bool LocalIsOneOfTSO(Tile tile, List<TileShapeObject> tsoList)
+            {
+                bool returnTrue = false;
+                foreach (var tso in tsoList)
+                {
+                    if (tile.IsTSO(tso)) returnTrue = true;
+                }
+                return returnTrue;
             }
         }
         public static (Direction, int, int) DetermineDirectionBetweenTiles(int tile1X, int tile1Y, int tile2X, int tile2Y)
@@ -211,6 +213,10 @@ namespace remake
                 if (moveOnY) return tile1Y < tile2Y ? Direction.Down : Direction.Up;
                 return Direction.Up;
             }
+        }
+        public static bool IsWithinGrid(int x, int y)
+        {
+            return x >= 0 && y >= 0 && x < GridSquare && y < GridSquare;
         }
         public static Tile GetTile(int X, int Y)
         {

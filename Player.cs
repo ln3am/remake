@@ -43,7 +43,7 @@ namespace remake
             }
             int newX = X + deltaX;
             int newY = Y + deltaY;
-            if (newX < 0 || newX >= PlayingField.GridSquare || newY < 0 || newY >= PlayingField.GridSquare) return;
+            if (!PlayingField.IsWithinGrid(newX, newY)) return;
             
             tile = PlayingField.GetPlayerTile();
             tile.MovePlayerAway(direction);

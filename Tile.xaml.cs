@@ -34,6 +34,8 @@ namespace remake
         public int PointValue = 0;
         public double AnimationSpeed = 0.2;
 
+        private List<Shape> OwnedShapes = new List<Shape>();
+
         private DispatcherTimer Timer;
         public Tile()
         {
@@ -43,6 +45,24 @@ namespace remake
         {
             SetShapeObjectColour(Colours.BlueGradient(), TileShapeObject.Tile);
             SetShapeObjectColour(Colours.VioletGradient(), TileShapeObject.Player);
+        }
+        public bool IsTSO(TileShapeObject tso)
+        {
+            switch (tso)
+            {
+                case TileShapeObject.Player:
+                    return IsPlayerTile;
+                case TileShapeObject.Point:
+                    return IsPlayerPointTile;
+                case TileShapeObject.Tile:
+                    return true;
+                case TileShapeObject.Enemy:
+                    return IsEnemyTile;
+                case TileShapeObject.ShockExplosive:
+                    return IsExplosiveTile;
+                default:
+                    return false;
+            }
         }
         public bool IsEmpty()
         {
@@ -58,16 +78,16 @@ namespace remake
         public void MovePlayerTo(Direction direction)
         {
             IsPlayerTile = true;
-            ReappearAndMoveToCenter(direction, playerTransform, TilePlayer);
+            ReappearAndMoveToCenter(direction, TilePlayer);
         }
         public void MovePlayerAway(Direction direction)
         {
             IsPlayerTile = false;
-            MoveAndDisappear(direction, playerTransform, TilePlayer);
+            MoveAndDisappear(direction, TilePlayer);
         }
         public void SetShapeObjectColour(LinearGradientBrush colour, TileShapeObject shape)
         {
-            DecideShapeObject(shape).Item2.Fill = colour; 
+            DecideShapeObject(shape).Fill = colour; 
         }
         public int CollectPlayerPoint()
         {
@@ -82,9 +102,9 @@ namespace remake
         {
            UIDispatcher.Invoke(new Action(() =>
            {
-               (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-               objects.Item2.Fill = colour;
-               objects.Item2.Visibility = Visibility.Visible;
+               Shape shapeObj = DecideShapeObject(shape);
+               shapeObj.Fill = colour;
+               shapeObj.Visibility = Visibility.Visible;
                UpdateTileStateInfo(shape, true);
            }));
         }
@@ -92,8 +112,8 @@ namespace remake
         {
             UIDispatcher.Invoke(new Action(() =>
             {
-                (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-                ReappearAndMoveToCenter(direction, objects.Item1, objects.Item2);
+                Shape shapeObj = DecideShapeObject(shape);
+                ReappearAndMoveToCenter(direction, shapeObj);
                 SetShapeObjectColour(GetColour(colour), shape);
                 UpdateTileStateInfo(shape, true);
             }));
@@ -102,28 +122,48 @@ namespace remake
         {
             UIDispatcher.Invoke(new Action(() =>
             {
-                (TranslateTransform, Shape) objects = DecideShapeObject(shape);
-                MoveAndDisappear(direction, objects.Item1, objects.Item2);
+                Shape shapeObj = DecideShapeObject(shape);
+                MoveAndDisappear(direction, shapeObj);
+                UpdateTileStateInfo(shape, false);
+            })); 
+        }
+        public void MoveNewShapeTo(Direction direction, TileShapeObject shape, GradientColour colour)
+        {
+            UIDispatcher.Invoke(new Action(() =>
+            {
+                Shape shapeObj = CreateEllipse(colour);
+                OwnedShapes.Add(shapeObj);
+                ReappearAndMoveToCenter(direction, shapeObj);
+                SetShapeObjectColour(GetColour(colour), shape);
+                UpdateTileStateInfo(shape, true);
+            }));
+        }
+        public void MoveNewShapeAway(Direction direction, TileShapeObject shape)
+        {
+            UIDispatcher.Invoke(new Action(() =>
+            {
+                Shape shapeObj = OwnedShapes[0];
+                OwnedShapes.RemoveAt(0);
+                MoveAndDisappear(direction, shapeObj);
                 UpdateTileStateInfo(shape, false);
             }));
         }
-
-        private (TranslateTransform, Shape) DecideShapeObject(TileShapeObject shape)
+        private Shape DecideShapeObject(TileShapeObject shape)
         {
             switch (shape)
             {
                 case TileShapeObject.Player:
-                    return (playerTransform, TilePlayer);
+                    return TilePlayer;
                 case TileShapeObject.Enemy:
-                    return (enemyTransform, TileCircEnemy);
+                    return TileCircEnemy;
                 case TileShapeObject.Tile: 
-                    return (null, TileRec);
+                    return TileRec;
                 case TileShapeObject.Point:
-                    return (pointTransform, TileCirc);
+                    return TileCirc;
                 case TileShapeObject.ShockExplosive:
-                    return (shocktTransform, TileTria);
+                    return TileTria;
             }
-            return (null, null);
+            return null;
         }
         private void UpdateTileStateInfo(TileShapeObject shape, bool state)
         {
@@ -162,8 +202,10 @@ namespace remake
             }
             return null;
         }
-        private void MoveAndDisappear(Direction direction, TranslateTransform moveShape, Shape shape)
+        private void MoveAndDisappear(Direction direction, Shape shape)
         {
+            shape.RenderTransform = new TranslateTransform();
+            TranslateTransform moveShape = shape.RenderTransform as TranslateTransform;
             DoubleAnimation moveAnimationX = new DoubleAnimation
             {
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
@@ -207,12 +249,15 @@ namespace remake
                 shape.Visibility = Visibility.Collapsed;
                 moveShape.X = moveShape.Y = 0;
                 shape.Opacity = 1;
-            };
+                };
             Timer.Start();
         }
 
-        private void ReappearAndMoveToCenter(Direction direction, TranslateTransform moveShape, Shape shape)
+        private void ReappearAndMoveToCenter(Direction direction, Shape shape)
         {
+            shape.RenderTransform = new TranslateTransform();
+            TranslateTransform moveShape = shape.RenderTransform as TranslateTransform;
+
             moveShape.X = (direction == Direction.Left || direction == Direction.UpLeft || direction == Direction.DownLeft) ? -20 :
                           (direction == Direction.Right || direction == Direction.UpRight || direction == Direction.DownRight) ? 20 : 0;
             moveShape.Y = (direction == Direction.Up || direction == Direction.UpLeft || direction == Direction.UpRight) ? -20 :
@@ -235,6 +280,7 @@ namespace remake
                 Duration = TimeSpan.FromSeconds(AnimationSpeed),
                 From = 0,
                 To = 1
+
             };
 
             shape.Visibility = Visibility.Visible;
@@ -253,6 +299,23 @@ namespace remake
                 moveShape.BeginAnimation(TranslateTransform.XProperty, moveAnimationX);
                 moveShape.BeginAnimation(TranslateTransform.YProperty, moveAnimationY);
             }
+        }
+        private Ellipse CreateEllipse(GradientColour gradient)
+        {
+            LinearGradientBrush brush = GetColour(gradient);
+
+            Ellipse ellipse = new Ellipse
+            {
+                Visibility = Visibility.Visible,
+                Fill = brush,
+                Stroke = Brushes.Black,
+                Width = 25,
+                Height = 25
+            };
+            Canvas.SetLeft(ellipse, 12.5);
+            Canvas.SetTop(ellipse, 12.5);
+            alignment.Children.Add(ellipse);
+            return ellipse;
         }
     }
 }

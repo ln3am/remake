@@ -8,22 +8,27 @@ using System.Windows.Threading;
 using remake;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Remaster
 {
     public abstract class BaseShapeObstacle
     {
-        protected DispatcherTimer timer = new DispatcherTimer();
-        protected int timerIntervalMS = 900;
+        public int timerIntervalMS = 900;
         public int X;
         public int Y;
+
+        protected DispatcherTimer timer = new DispatcherTimer();
+        protected LinearGradientBrush ShapeColour;
+        protected Direction previousDirection = Direction.Center;
         protected Tile obstacle;
         protected TileShapeObject Shape;
         public BaseShapeObstacle(TileShapeObject shape)
         {
+            ShapeColour = Colours.RedGradient();
             Shape = shape;
             obstacle = PlayingField.GetRandomFreeCoordinate();
-            obstacle.SetShapeObject(Shape, Colours.RedGradient());
+            obstacle.SetShapeObject(Shape, ShapeColour);
             X = obstacle.X;
             Y = obstacle.Y;
             SetTimerInterval(timerIntervalMS);
@@ -43,11 +48,16 @@ namespace Remaster
         {
             var directionDistance = PlayingField.DetermineDirectionBetweenTiles(X, Y, Player.X, Player.Y);
             Direction direction = directionDistance.Item1;
-            obstacle.MoveShapeAway(direction, Shape);
-            (X, Y) = PlayingField.UpdateCoordinatesFromDirection(X, Y, direction);
 
+            (int setX, int setY, bool noMove, direction) = PlayingField.UpdateCoordinatesFromDirectionWithObstacles(X, Y, direction, previousDirection, new List<TileShapeObject>{ TileShapeObject.Point, TileShapeObject.Enemy });
+            if (noMove) return;
+            previousDirection = direction;
+            obstacle.MoveShapeAway(direction, Shape);
+            
+            X = setX; 
+            Y = setY;
             bool CloseDistance = directionDistance.Item2 + directionDistance.Item3 <= 10;
-            if (CloseDistance) SetTimerInterval(450); 
+            if (CloseDistance) SetTimerInterval(timerIntervalMS/2); 
             else SetTimerInterval(timerIntervalMS);
 
             obstacle = PlayingField.GetTile(X, Y);
@@ -59,6 +69,8 @@ namespace Remaster
     {
         public Tile Obstacle;
         public int Radius;
+        private LinearGradientBrush ShapeColour;
+        private GradientColour ShapeColourType;
         private TileShapeObject Shape;
         private int TimeTickMS;
         public int X;
@@ -67,10 +79,12 @@ namespace Remaster
         {
             Tile center = PlayingField.GetRandomFreeCoordinate();
             TimeTickMS = timeTickMS;
+            ShapeColour = Colours.OrangeGradient();
+            ShapeColourType = GradientColour.Orange;
             X = center.X; 
             Y = center.Y;
             Obstacle = center;
-            center.SetShapeObject(TileShapeObject.ShockExplosive, Colours.VioletGradient());
+            center.SetShapeObject(TileShapeObject.ShockExplosive, ShapeColour);
             if (center.IsPlayerPointTile) center.CollectPlayerPoint();
             ExplosionLayers(radius);
         }
@@ -99,8 +113,8 @@ namespace Remaster
                     Tile tile = tileDirection.Item1;
                     if (tile.IsPlayerPointTile) tile.CollectPlayerPoint();
                     if (tile.IsPlayerTile) Player.DecreaseHP(1);
-                    if (MoveTo) tile.MoveShapeTo(PlayingField.OppositeDirection(tileDirection.Item2), TileShapeObject.ShockExplosive, GradientColour.Violet);
-                    else tile.MoveShapeAway(tileDirection.Item2, TileShapeObject.ShockExplosive);
+                    if (MoveTo) tile.MoveNewShapeTo(PlayingField.OppositeDirection(tileDirection.Item2), TileShapeObject.ShockExplosive, ShapeColourType);
+                    else tile.MoveNewShapeAway(tileDirection.Item2, TileShapeObject.ShockExplosive);
                 }
             }
         }
@@ -113,18 +127,13 @@ namespace Remaster
             {
                 for (int x = X - radius; x <= X + radius; x++)
                 {
-                    if (IsWithinGrid(x, y) && IsOnRadius(x, y, radius))
+                    if (PlayingField.IsWithinGrid(x, y) && IsOnRadius(x, y, radius))
                     {
                         outerCoordinates.Add(PlayingField.GetTile(x, y));
                     }
                 }
             }
             return outerCoordinates;
-        }
-
-        private bool IsWithinGrid(int x, int y)
-        {
-            return x >= 0 && y >= 0 && x < PlayingField.GridSquare && y < PlayingField.GridSquare;
         }
 
         private bool IsOnRadius(int x, int y, int radius)

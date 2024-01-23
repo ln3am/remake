@@ -21,7 +21,7 @@
         <Rectangle x:Name="TileRec" StrokeThickness="2" Fill="LightBlue" Stroke="Black"/>
         
         <Viewbox>
-            <Canvas Width="50" Height="50">
+            <Canvas x:Name="alignment" Width="50" Height="50">
 
                 <Grid VerticalAlignment="Center" Width="30" Height="30" HorizontalAlignment="Center" Canvas.Left="10" Canvas.Top="10">
                     <Ellipse x:Name="TileCirc" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
@@ -29,13 +29,18 @@
                         <TranslateTransform x:Name="pointTransform"/>
                     </Grid.RenderTransform>
                 </Grid>
-                <Grid VerticalAlignment="Center" Width="30" Height="30" HorizontalAlignment="Center" Canvas.Left="10" Canvas.Top="10">
+                <Grid VerticalAlignment="Center" Width="35" Height="35" HorizontalAlignment="Center" Canvas.Left="7.5" Canvas.Top="7.5">
                     <Ellipse x:Name="TileCircEnemy" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
                     <Grid.RenderTransform>
                         <TranslateTransform x:Name="enemyTransform"/>
                     </Grid.RenderTransform>
                 </Grid>
-
+                <Grid VerticalAlignment="Center" Width="25" Height="25" HorizontalAlignment="Center" Canvas.Left="12.5" Canvas.Top="12.5">
+                    <Ellipse x:Name="TileTria" Visibility="Collapsed" Fill="{StaticResource GradientBrushGreen}" Stroke="Black" />
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="shocktTransform"/>
+                    </Grid.RenderTransform>
+                </Grid>
 
                 <Polygon x:Name="TilePlayer" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
                     <Polygon.Points>
@@ -48,17 +53,6 @@
                     </Polygon.Points>
                     <Polygon.RenderTransform>
                         <TranslateTransform x:Name="playerTransform"/>
-                    </Polygon.RenderTransform>
-                </Polygon>
-
-                <Polygon x:Name="TileTria" Visibility="Collapsed" Stroke="Black" StrokeThickness="0.5">
-                    <Polygon.Points>
-                        <Point X="25" Y="9"/>
-                        <Point X="40" Y="40"/>
-                        <Point X="10" Y="40"/>
-                    </Polygon.Points>
-                    <Polygon.RenderTransform>
-                        <TranslateTransform x:Name="shocktTransform"/>
                     </Polygon.RenderTransform>
                 </Polygon>
                 
